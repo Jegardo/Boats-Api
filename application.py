@@ -1,60 +1,65 @@
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import PrimaryKeyConstraint
-from sqlalchemy import CheckConstraint
-from sqlalchemy import ForeignKeyConstraint
-from sqlalchemy import ForeignKey
+from sqlalchemy import *
 
 
 app = Flask(__name__)
 
-app.config['SQLALACHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data.db'
 db = SQLAlchemy(app)
-
-colors = ('Red', 'Blue', 'Green', 'Yellow')
 
 
 class Sailor(db.Model):
-    sid = db.Column(db.Integer, nullable=False),
-    sname = db.Column(db.String(40)),
-    rating = db.Column(db.Integer, CheckConstraint(
-        '1 < rating < 10', name='c_rating')),
-    age = db.Column(db.Integer, CheckConstraint('age > 17', name='c_age')),
-    PrimaryKeyConstraint('sid', name='c_sid')
+    __tablename__ = 'sailor'
+
+    sid = db.Column(db.Integer, primary_key=True, nullable=False)
+    sname = db.Column(db.String(80), nullable=False)
+    rating = db.Column(db.Integer, db.CheckConstraint(
+        '1 < rating < 10', name='c_rating'))
+    age = db.Column(db.Integer, db.CheckConstraint('age > 17', name='c_age'))
+    db.PrimaryKeyConstraint('sid', name='c_sid')
 
     def __repr__(self):
-        return f'{self.sid} - {self.sname}'
+        return f'{self.sid} - {self.sname} - {self.rating} - {self.age}'
 
 
 class Boat(db.Model):
-    bid = db.Column(db.Integer, nullable=False),
-    bname = db.Column(db.String(40)),
-    color = db.Column(db.String(40), CheckConstraint(
-        'color in colors', name='c_color')),
-    PrimaryKeyConstraint('bid', name='c_bid')
+    __tablename__ = 'boat'
+
+    bid = db.Column(db.Integer, primary_key=True, nullable=False)
+    bname = db.Column(db.String(40))
+    color = db.Column(db.String(40))
+    db.PrimaryKeyConstraint('bid', name='c_bid')
 
     def __repr__(self):
-        return f'{self.bid} - {self.bname}'
+        return f'{self.bid} - {self.bname} - {self.color}'
 
 
 class Marina(db.Model):
-    mid = db.Column(db.Integer, nullable=False),
-    mname = db.Column(db.String(40), nullable=False),
+    __tablename__ = 'marina'
+
+    mid = db.Column(db.Integer, primary_key=True, nullable=False)
+    mname = db.Column(db.String(40), nullable=False)
     capacity = db.Column(db.Integer)
-    PrimaryKeyConstraint('mid', name='c_mid')
+    db.PrimaryKeyConstraint('mid', name='c_mid')
 
     def __repr__(self):
-        return f'{self.mid} - {self.mname}'
+        return f'{self.mid} - {self.mname} - {self.capacity}'
 
 
 class Reservation(db.Model):
-    sid = db.Column(db.Integer, ForeignKey(
-        'Sailor.sid', ondelete="CASCADE"), nullable=False, ),
-    bid = db.Column(db.Integer, ForeignKey(
-        'Boat.bid', ondelete="CASCADE"), nullable=False),
-    mid = db.Column(db.Integer, ForeignKey('Marina.mid', ondelete="SET NULL")),
-    r_date = db.Column(db.String(12), nullable=False)
-    PrimaryKeyConstraint('sid', 'bid', 'r_date', name='p_key')
+    __tablename__ = 'reservation'
+    sid = db.Column(db.Integer, db.ForeignKey(
+        'sailor.sid', ondelete="CASCADE"), primary_key=True, nullable=False)
+    bid = db.Column(db.Integer, db.ForeignKey(
+        'boat.bid', ondelete="CASCADE"), primary_key=True, nullable=False)
+    mid = db.Column(db.Integer, db.ForeignKey(
+        'marina.mid', ondelete="SET NULL"))
+    r_date = db.Column(db.String(12), primary_key=True, nullable=False)
+    db.PrimaryKeyConstraint('sid', 'bid', 'r_date', name='p_key')
+
+    def __repr__(self):
+        return f'{self.sid} - {self.bid} - {self.mid} - {self.r_date}'
 
 
 @app.route('/')
@@ -106,7 +111,7 @@ def get_reservations():
 
     output = []
     for reservation in reservations:
-        reservation_data = {'mid': reservation.mid,
+        reservation_data = {'sid': reservation.sid,
                             'bid': reservation.bid, 'mid': reservation.mid, 'r_date': reservation.r_date}
         output.append(reservation_data)
 
