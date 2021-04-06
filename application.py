@@ -120,7 +120,7 @@ def set_sailor():
 def delete_sailor(id):
     sailor = Sailor.query.get(id)
     if sailor is None:
-        return {"error": "not found"}
+        return {"error": "not found!"}
     db.session.delete(sailor)
     db.session.commit()
     return {"message": "deleted!"}
@@ -153,6 +153,15 @@ def set_boat():
     return{'bid': boat.bid, 'bname': boat.bname}
 
 
+@app.route('/boats/<id>', methods=['DELTE'])
+def delete_boat(id):
+    boat = Boat.query.get(id)
+    if boat is None:
+        return {"error": "not found!"}
+    db.session.delete(boat)
+    db.session.commit()
+    return {"message": "deleted!"}
+
 @app.route('/marinas')
 def get_marinas():
     marinas = Marina.query.all()
@@ -180,6 +189,16 @@ def set_marina():
     db.session.add(marina)
     db.session.commit()
     return{'mid': marina.mid, 'mname': marina.mname}
+
+
+@app.route('/marinas/<id>', methods=['DELETE'])
+def delete_marina(id):
+    marina = Marina.query.get(id)
+    if marina is None:
+        return {"error": "not found!"}
+    db.session.delete(marina)
+    db.session.commit()
+    return{"message": "deleted!"}
 
 
 @app.route('/reservations')
@@ -216,3 +235,13 @@ def set_reservation():
     db.session.commit()
 
     return{'rid': reservation.rid, 'r_date': reservation.r_date}
+
+
+@app.route('/reservations/<id>', methods=['DELETE'])
+def delete_reservation(id):
+    reservation = Reservation.query.get(id)
+    if reservation is None:
+        return {"error": "not found!"}
+    db.session.delete(reservation)
+    db.session.commit()
+    return {"message": "deleted!"}
