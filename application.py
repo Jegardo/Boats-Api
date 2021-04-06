@@ -1,13 +1,24 @@
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import *
+from sqlalchemy import event
 from sqlalchemy.orm import relationship
+from sqlalchemy.engine import Engine
+from sqlite3 import Connection as SQLite3Connection
 
 
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data.db'
 db = SQLAlchemy(app)
+
+
+@event.listens_for(Engine, "connect")
+def _set_sqlite_pragma(dbapi_connection, connection_record):
+    if isinstance(dbapi_connection, SQLite3Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON;")
+        cursor.close()
 
 
 class Sailor(db.Model):
@@ -21,7 +32,7 @@ class Sailor(db.Model):
     db.PrimaryKeyConstraint('sid', name='c_sid')
 
     reservations = relationship(
-        "Reservation", cascade="all, delete", passive_deletes=True)
+        "Reservation", cascade="all, delete, delete-orphan", passive_deletes=True)
 
     def __repr__(self):
         return f'{self.sid} - {self.sname} - {self.rating} - {self.age}'
@@ -36,7 +47,7 @@ class Boat(db.Model):
     db.PrimaryKeyConstraint('bid', name='c_bid')
 
     reservations = relationship(
-        "Reservation", cascade="all, delete", passive_deletes=True)
+        "Reservation", cascade="all, delete, delete-orphan", passive_deletes=True)
 
     def __repr__(self):
         return f'{self.bid} - {self.bname} - {self.color}'
@@ -204,4 +215,4 @@ def set_reservation():
     db.session.add(reservation)
     db.session.commit()
 
-    return{'rid': request.rid, 'r_date': request.r_date}
+    return{'rid': reservation.rid, 'r_date': reservation.r_date}
