@@ -126,6 +126,22 @@ def delete_sailor(id):
     return {"message": "deleted!"}
 
 
+@app.route('/sailors/<id>', methods=["PUT"])
+def update_sailor(id):
+    sailor = db.session.query(Sailor).get(id)
+    ud_sailor = request.json
+    if sailor is None:
+        db.session.add(ud_sailor)
+        db.session.commit()
+        return{"message": "created!"}
+
+    for k, v in ud_sailor.items():
+        setattr(sailor, k, v)
+
+    db.session.commit()
+    return {"message": "updated"}
+
+
 @app.route('/boats')
 def get_boats():
     boats = Boat.query.all()
@@ -153,7 +169,7 @@ def set_boat():
     return{'bid': boat.bid, 'bname': boat.bname}
 
 
-@app.route('/boats/<id>', methods=['DELTE'])
+@ app.route('/boats/<id>', methods=['DELETE'])
 def delete_boat(id):
     boat = Boat.query.get(id)
     if boat is None:
@@ -162,7 +178,25 @@ def delete_boat(id):
     db.session.commit()
     return {"message": "deleted!"}
 
-@app.route('/marinas')
+
+@ app.route('/boats/<id>', methods=['PUT'])
+def update_boat(id):
+    boat = db.session.query(Boat).get(id)
+    ud_boat = request.json
+    if boat is None:
+        db.session.add(ud_boat)
+        db.session.commit()
+        return {"message": "created!"}
+
+    for k, v in ud_boat.items():
+        setattr(boat, k, v)
+
+    db.session.commit()
+
+    return {"message": "updated!"}
+
+
+@ app.route('/marinas')
 def get_marinas():
     marinas = Marina.query.all()
 
@@ -175,14 +209,14 @@ def get_marinas():
     return {'marinas': output}
 
 
-@app.route('/marinas/<id>')
+@ app.route('/marinas/<id>')
 def get_marina(id):
     marina = Marina.query.get_or_404(id)
     return{'mid': marina.mid,
            'mname': marina.mname, 'capacity': marina.capacity}
 
 
-@app.route('/marinas', methods=['POST'])
+@ app.route('/marinas', methods=['POST'])
 def set_marina():
     marina = Marina(
         mid=request.json['mid'], mname=request.json['mname'], capacity=request.json['capacity'])
@@ -191,7 +225,7 @@ def set_marina():
     return{'mid': marina.mid, 'mname': marina.mname}
 
 
-@app.route('/marinas/<id>', methods=['DELETE'])
+@ app.route('/marinas/<id>', methods=['DELETE'])
 def delete_marina(id):
     marina = Marina.query.get(id)
     if marina is None:
@@ -201,7 +235,23 @@ def delete_marina(id):
     return{"message": "deleted!"}
 
 
-@app.route('/reservations')
+@ app.route('/marinas/<id>', methods=["PUT"])
+def update_marina(id):
+    marina = db.session.query(Marina).get(id)
+    ud_marina = request.json
+    if marina is None:
+        db.session.add(ud_marina)
+        db.session.commit()
+        return{"message": "created!"}
+
+    for k, v in ud_marina:
+        setattr(marina, k, v)
+
+    db.session.commit()
+    return{"message": "updated!"}
+
+
+@ app.route('/reservations')
 def get_reservations():
     reservations = Reservation.query.all()
 
@@ -214,14 +264,14 @@ def get_reservations():
     return {'reservations': output}
 
 
-@app.route('/reservations/<id>')
+@ app.route('/reservations/<id>')
 def get_reservation(id):
     reservation = Reservation.query.get_or_404(id)
     return{'rid': reservation.rid, 'sid': reservation.sid,
            'bid': reservation.bid, 'mid': reservation.mid, 'r_date': reservation.r_date}
 
 
-@app.route('/reservations', methods=['POST'])
+@ app.route('/reservations', methods=['POST'])
 def set_reservation():
     reservation = Reservation(rid=request.json['rid'], sid=request.json['sid'],
                               bid=request.json['bid'], mid=request.json['mid'], r_date=request.json['r_date'])
@@ -237,7 +287,7 @@ def set_reservation():
     return{'rid': reservation.rid, 'r_date': reservation.r_date}
 
 
-@app.route('/reservations/<id>', methods=['DELETE'])
+@ app.route('/reservations/<id>', methods=['DELETE'])
 def delete_reservation(id):
     reservation = Reservation.query.get(id)
     if reservation is None:
@@ -245,3 +295,36 @@ def delete_reservation(id):
     db.session.delete(reservation)
     db.session.commit()
     return {"message": "deleted!"}
+
+
+@ app.route('/reservations/<id>', methods=["PUT"])
+def update_reservation(id):
+    reservation = db.session.query(Reservation).get(id)
+    ud_reservation = Reservation(rid=request.json['rid'], sid=request.json['sid'],
+                                 bid=request.json['bid'], mid=request.json['mid'], r_date=request.json['r_date'])
+    if reservation is None:
+        if Sailor.query.get(ud_reservation.sid) is None:
+            return {"Error": "Sailor doesn't exist!"}
+        if Boat.query.get(ud_reservation.bid) is None:
+            return {"Error": "Boat doesn't exist!"}
+        if Marina.query.get(ud_reservation.mid) is None:
+            return {"Error": "Marina doesn't exist!"}
+        db.sessionm.add(ud_reservation)
+        db.session.commit()
+        return{"message": "created!"}
+
+    if Sailor.query.get(ud_reservation.sid) is None:
+        return {"Error": "Sailor doesn't exist!"}
+    if Boat.query.get(ud_reservation.bid) is None:
+        return {"Error": "Boat doesn't exist!"}
+    if Marina.query.get(ud_reservation.mid) is None:
+        return {"Error": "Marina doesn't exist!"}
+
+    reservation.rid = ud_reservation.rid
+    reservation.sid = ud_reservation.sid
+    reservation.bid = ud_reservation.bid
+    reservation.mid = ud_reservation.mid
+    reservation.r_date = ud_reservation.r_date
+
+    db.session.commit()
+    return {"message": "updated"}
