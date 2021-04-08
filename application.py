@@ -71,10 +71,13 @@ class Reservation(db.Model):
     rid = db.Column(db.Integer, primary_key=True, nullable=False)
     sid = db.Column(db.Integer, db.ForeignKey(
         'sailor.sid', ondelete="CASCADE"), nullable=False)
+    scon = db.relationship("Sailor", backref="sailor")
     bid = db.Column(db.Integer, db.ForeignKey(
         'boat.bid', ondelete="CASCADE"), nullable=False)
+    bcon = db.relationship("Boat", backref="boat")
     mid = db.Column(db.Integer, db.ForeignKey(
         'marina.mid', ondelete="SET NULL"))
+    mcon = db.relationship("Marina", backref="marina")
     r_date = db.Column(db.String(12), nullable=False)
     db.PrimaryKeyConstraint('rid', name='c_rid')
 
@@ -244,11 +247,11 @@ def update_marina(id):
         db.session.commit()
         return{"message": "created!"}
 
-    for k, v in ud_marina:
+    for k, v in ud_marina.items():
         setattr(marina, k, v)
 
     db.session.commit()
-    return{"message": "updated!"}
+    return {"message": "updated"}
 
 
 @ app.route('/reservations')
@@ -275,12 +278,7 @@ def get_reservation(id):
 def set_reservation():
     reservation = Reservation(rid=request.json['rid'], sid=request.json['sid'],
                               bid=request.json['bid'], mid=request.json['mid'], r_date=request.json['r_date'])
-    if Sailor.query.get(reservation.sid) is None:
-        return {"Error": "Sailor doesn't exist!"}
-    if Boat.query.get(reservation.bid) is None:
-        return {"Error": "Boat doesn't exist!"}
-    if Marina.query.get(reservation.mid) is None:
-        return {"Error": "Marina doesn't exist!"}
+
     db.session.add(reservation)
     db.session.commit()
 
@@ -300,31 +298,14 @@ def delete_reservation(id):
 @ app.route('/reservations/<id>', methods=["PUT"])
 def update_reservation(id):
     reservation = db.session.query(Reservation).get(id)
-    ud_reservation = Reservation(rid=request.json['rid'], sid=request.json['sid'],
-                                 bid=request.json['bid'], mid=request.json['mid'], r_date=request.json['r_date'])
+    ud_reservation = request.json
     if reservation is None:
-        if Sailor.query.get(ud_reservation.sid) is None:
-            return {"Error": "Sailor doesn't exist!"}
-        if Boat.query.get(ud_reservation.bid) is None:
-            return {"Error": "Boat doesn't exist!"}
-        if Marina.query.get(ud_reservation.mid) is None:
-            return {"Error": "Marina doesn't exist!"}
-        db.sessionm.add(ud_reservation)
+        db.session.add(ud_reservation)
         db.session.commit()
         return{"message": "created!"}
 
-    if Sailor.query.get(ud_reservation.sid) is None:
-        return {"Error": "Sailor doesn't exist!"}
-    if Boat.query.get(ud_reservation.bid) is None:
-        return {"Error": "Boat doesn't exist!"}
-    if Marina.query.get(ud_reservation.mid) is None:
-        return {"Error": "Marina doesn't exist!"}
-
-    reservation.rid = ud_reservation.rid
-    reservation.sid = ud_reservation.sid
-    reservation.bid = ud_reservation.bid
-    reservation.mid = ud_reservation.mid
-    reservation.r_date = ud_reservation.r_date
+    for k, v in ud_reservation.items():
+        setattr(reservation, k, v)
 
     db.session.commit()
-    return {"message": "updated"}
+    return{"message": "updated!"}
